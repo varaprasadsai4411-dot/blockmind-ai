@@ -1,7 +1,20 @@
-import { useCallback, useState } from "react";
-export function useAuth(){
- const [isAuthenticated,setAuth]=useState(()=>typeof window!=="undefined" && localStorage.getItem("blockmind-auth")==="1");
- const signIn=useCallback(async (_provider?:string,_data?:FormData)=>{setAuth(true);if(typeof window!=="undefined")localStorage.setItem("blockmind-auth","1");},[]);
- const signOut=useCallback(async()=>{setAuth(false);if(typeof window!=="undefined")localStorage.removeItem("blockmind-auth");},[]);
- return {user:isAuthenticated?{name:"Player"}:null,isLoading:false,isAuthenticated,signIn,signOut};
+import { api } from "@/convex/_generated/api";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvexAuth, useQuery } from "convex/react";
+
+export function useAuth() {
+  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.currentUser);
+  const { signIn, signOut } = useAuthActions();
+
+  // Derive isLoading directly from the dependencies instead of managing separate state
+  const isLoading = isAuthLoading || user === undefined;
+
+  return {
+    isLoading,
+    isAuthenticated,
+    user,
+    signIn,
+    signOut,
+  };
 }
